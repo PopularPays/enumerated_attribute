@@ -287,12 +287,12 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when setting invalid enumeration value with :attributeblue_car =  method" do
-    lambda { red_car.attributes = {:gear=>:yo, :lights => 'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect { red_car.attributes = {:gear=>:yo, :lights => 'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on save! after setting invalid enumeration value with :attributeblue_car =  method" do
     red_car.attributes = {:gear=>:yo, :lights => 'on'}
-    lambda { red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+    expect { red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
   end
 
   it "should not set init value for enumerated column attribute saved as nil" do
