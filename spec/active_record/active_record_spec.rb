@@ -30,12 +30,9 @@ describe "RaceCar" do
     end
   end
 
-  it "should retrieve :gear enums through enums method" do
+  it "#enums(:gear) retrieves all the gears" do
+    red_car.gear.should be_a_kind_of Symbol
     red_car.enums(:gear).should == red_car.gears
-  end
-
-  it "should return a Symbol type from reader methods" do
-    red_car.gear.should be_an_instance_of(Symbol)
   end
 
   it "should increment and decrement :gear attribute correctly" do
