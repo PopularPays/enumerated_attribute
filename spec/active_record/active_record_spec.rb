@@ -79,7 +79,7 @@ describe "RaceCar" do
       blue_car.should_not be_nil
       blue_car.gear.should == :second
       blue_car.name.should == 'myspecialty'
-      lambda { blue_car.save! }.should_not raise_exception
+      expect{ blue_car.save! }.should_not raise_exception
 
       yellow_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
       yellow_car.gear.should == :second
@@ -166,7 +166,7 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when parametrically initialized with invalid non-column attribute" do
-    lambda{ red_car.choke= :all}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car.choke= :all}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should not be valid on non-column attribute with parametrically initialized bad value" do
@@ -196,12 +196,12 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when setting enumerated column attribute with []= method" do
-    lambda{ red_car[:gear]= :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car[:gear]= :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on save! after setting enumerated column attribute with []= method" do
     red_car[:gear] = :drive
-    lambda{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
   end
 
   it "should set and retrieve string for non-enumerated column attributes with []=" do
@@ -217,12 +217,12 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration for invalid enum passed to attributeblue_car = " do
-    lambda { red_car.attributes = {:lights => 'off', :gear =>:drive} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car.attributes = {:lights => 'off', :gear =>:drive} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on save! for invalid enum passed to attributeblue_car = " do
     red_car.attributes = {:lights => 'off', :gear =>:drive}
-    lambda { red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
   end
 
   it "should retrieve symbols for enumerations from ActiveRecord :attributes method" do
@@ -287,12 +287,12 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when setting invalid enumeration value with :attributeblue_car =  method" do
-    expect { red_car.attributes = {:gear=>:yo, :lights => 'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car.attributes = {:gear=>:yo, :lights => 'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on save! after setting invalid enumeration value with :attributeblue_car =  method" do
     red_car.attributes = {:gear=>:yo, :lights => 'on'}
-    expect { red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
   end
 
   it "should not set init value for enumerated column attribute saved as nil" do
