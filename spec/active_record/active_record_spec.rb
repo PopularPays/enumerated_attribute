@@ -125,9 +125,9 @@ describe "RaceCar" do
 
   it "should initialize using parameter hash with string keys" do
     yellow_car = RaceCar.new({'name'=>'FastFurious',
-                             'gear'=>'second',
-                             'lights'=>'on',
-                             'choke'=>'medium'})
+                              'gear'=>'second',
+                              'lights'=>'on',
+                              'choke'=>'medium'})
     yellow_car.gear.should == :second
     yellow_car.lights.should == 'on'
     yellow_car.choke.should == :medium
@@ -158,11 +158,11 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when parametrically initialized with invalid column attribute value" do
-    lambda{ red_car.gear= :drive}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car.gear = :drive}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on create! when parametrically initialized with invalid column attribute value" do
-    lambda{ RaceCar.create!(:gear => :drive)}.should raise_error(ActiveRecord::RecordInvalid)
+    expect{ RaceCar.create!(:gear => :drive)}.should raise_error(ActiveRecord::RecordInvalid)
   end
 
 
@@ -316,7 +316,7 @@ describe "RaceCar" do
   end
 
   it "should save and retrieve its name" do
-    red_car.name= 'Green Meanie'
+    red_car.name = 'Green Meanie'
     red_car.save!
 
     blue_car = RaceCar.find red_car.id
