@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'active_record/test_in_memory'
 require 'active_record'
 require 'enumerated_attribute'
@@ -16,7 +17,6 @@ describe "RaceCar" do
                           :over_drive => "Over drive" }}
 
     it "sets default labels for :gear attribute" do
-      puts labels_hash.inspect
       select_options = [['Reverse', 'reverse'],
                         ['Neutral', 'neutral'],
                         ['First', 'first'],
@@ -48,24 +48,18 @@ describe "RaceCar" do
     red_car.gear.should == :first
   end
 
-  it "should have dynamic predicate methods for :gear attribute" do
+  it "has dynamic predicate methods for the :gear attribute" do
     red_car.gear = :second
-    red_car.gear_is_in_second?.should be_true
-    red_car.gear_not_in_second?.should be_false
-    red_car.gear_is_nil?.should be_false
-    red_car.gear_is_not_nil?.should be_true
+
+    red_car.should have_predicate_methods
   end
 
-  it "should have working dynamic predicate methods on retrieved objects" do
+  it "can access dynamic predicate methods on retrieved objects" do
     red_car.gear = :second
     red_car.save!
 
     blue_car = RaceCar.find red_car.id
-    blue_car.should_not be_nil
-    blue_car.gear_is_in_second?.should be_true
-    blue_car.gear_is_not_in_second?.should be_false
-    blue_car.gear_is_nil?.should be_false
-    blue_car.gear_is_not_nil?.should be_true
+    blue_car.should have_predicate_methods
   end
 
   it "should be created and found with dynamic find or creator method" do
