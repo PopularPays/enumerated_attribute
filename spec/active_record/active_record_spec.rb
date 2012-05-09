@@ -35,17 +35,24 @@ describe "RaceCar" do
     red_car.enums(:gear).should == red_car.gears
   end
 
-  it "should increment and decrement :gear attribute correctly" do
-    red_car.gear = :neutral
-    [:first, :second, :over_drive, :reverse, :neutral].each do |gear|
-      red_car.gear_next.should == gear
+  context 'generated methods' do
+    before do
+      red_car.gear = :neutral
     end
-    red_car.gear.should == :neutral
-    [ :reverse, :over_drive, :second].each do |gear|
-      red_car.gear_previous.should == gear
+
+    it "#gear_next" do
+      [:first, :second, :over_drive, :reverse, :neutral].each do |gear|
+        red_car.gear_next.should == gear
+      end
     end
-    red_car.gear_previous
-    red_car.gear.should == :first
+
+    it '#gear_previous' do
+      [ :reverse, :over_drive, :second].each do |gear|
+        red_car.gear_previous.should == gear
+      end
+      red_car.gear_previous
+      red_car.gear.should == :first
+    end
   end
 
   it "has dynamic predicate methods for the :gear attribute" do
@@ -125,9 +132,9 @@ describe "RaceCar" do
 
   it "should initialize using parameter hash with string keys" do
     yellow_car = RaceCar.new({'name'=>'FastFurious',
-                              'gear'=>'second',
-                              'lights'=>'on',
-                              'choke'=>'medium'})
+                             'gear'=>'second',
+                             'lights'=>'on',
+                             'choke'=>'medium'})
     yellow_car.gear.should == :second
     yellow_car.lights.should == 'on'
     yellow_car.choke.should == :medium
