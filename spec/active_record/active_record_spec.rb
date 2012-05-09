@@ -7,7 +7,7 @@ describe "RaceCar" do
 
   let (:red_car) { RaceCar.new }
 
-  it "should have default labels for :gear attribute" do
+  it "sets default labels for :gear attribute" do
     labels_hash = {:reverse=>'Reverse', :neutral=>'Neutral', :first=>'First', :second=>'Second', :over_drive=>'Over drive'}
     labels = ['Reverse', 'Neutral', 'First', 'Second', 'Over drive']
     select_options = [['Reverse', 'reverse'], ['Neutral', 'neutral'], ['First', 'first'], ['Second', 'second'], ['Over drive', 'over_drive']]
