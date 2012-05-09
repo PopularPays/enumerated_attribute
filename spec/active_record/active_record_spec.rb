@@ -165,7 +165,6 @@ describe "RaceCar" do
     expect{ RaceCar.create!(:gear => :drive)}.should raise_error(ActiveRecord::RecordInvalid)
   end
 
-
   it "should not raise InvalidEnumeration when parametrically initialized with invalid non-column attribute" do
     lambda{ red_car.choke= :all}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
@@ -174,7 +173,6 @@ describe "RaceCar" do
     red_car.choke = :all
     red_car.should_not be_valid
   end
-
 
   it "should return non-column enumerated attributes from [] method" do
     red_car[:choke].should == :none
@@ -185,14 +183,16 @@ describe "RaceCar" do
     red_car[:gear].should == :neutral
   end
 
-  it "should set non-column enumerated attributes with []= method" do
-    red_car[:choke] = :medium
-    red_car.choke.should == :medium
-  end
+  describe "#[]=" do
+    it "sets non-column enumerated attributes" do
+      red_car[:choke] = :medium
+      red_car.choke.should == :medium
+    end
 
-  it "should set enumerated column attriubtes with []= method" do
-    red_car[:gear] = :second
-    red_car.gear.should == :second
+    it "sets enumerated column attributes" do
+      red_car[:gear] = :second
+      red_car.gear.should == :second
+    end
   end
 
   it "should not raise InvalidEnumeration when setting enumerated column attribute with []= method" do
