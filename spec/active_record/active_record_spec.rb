@@ -57,7 +57,6 @@ describe "RaceCar" do
 
   it "has dynamic predicate methods for the :gear attribute" do
     red_car.gear = :second
-
     red_car.should have_predicate_methods
   end
 
@@ -72,7 +71,6 @@ describe "RaceCar" do
   context 'dynamic finders' do
     it "#find_or_create_by_name_and_gear" do
       blue_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
-      blue_car.should_not be_nil
       blue_car.gear.should == :second
       blue_car.name.should == 'specialty'
 
