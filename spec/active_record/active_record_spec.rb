@@ -7,15 +7,27 @@ describe "RaceCar" do
 
   let (:red_car) { RaceCar.new }
 
-  it "sets default labels for :gear attribute" do
-    labels_hash = {:reverse=>'Reverse', :neutral=>'Neutral', :first=>'First', :second=>'Second', :over_drive=>'Over drive'}
-    labels = ['Reverse', 'Neutral', 'First', 'Second', 'Over drive']
-    select_options = [['Reverse', 'reverse'], ['Neutral', 'neutral'], ['First', 'first'], ['Second', 'second'], ['Over drive', 'over_drive']]
+  describe 'labels' do
+    let(:labels) { ['Reverse', 'Neutral', 'First', 'Second', 'Over drive'] }
+    let(:labels_hash) { { :reverse => "Reverse",
+                          :neutral => "Neutral",
+                          :first => "First",
+                          :second => "Second",
+                          :over_drive => "Over drive" }}
 
-    red_car.gears.labels.should == labels
-    labels_hash.each { |k,v| red_car.gears.label(k).should == v }
-    red_car.gears.hash.should == labels_hash
-    red_car.gears.select_options.should == select_options
+    it "sets default labels for :gear attribute" do
+      puts labels_hash.inspect
+      select_options = [['Reverse', 'reverse'],
+                        ['Neutral', 'neutral'],
+                        ['First', 'first'],
+                        ['Second', 'second'],
+                        ['Over drive', 'over_drive']]
+
+      red_car.gears.labels.should == labels
+      labels_hash.each { |k,v| red_car.gears.label(k).should == v }
+      red_car.gears.hash.should == labels_hash
+      red_car.gears.select_options.should == select_options
+    end
   end
 
   it "should retrieve :gear enums through enums method" do
