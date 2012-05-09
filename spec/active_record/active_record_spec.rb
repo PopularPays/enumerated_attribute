@@ -37,15 +37,13 @@ describe "RaceCar" do
 
   it "should increment and decrement :gear attribute correctly" do
     red_car.gear = :neutral
-    red_car.gear_next.should == :first
-    red_car.gear_next.should == :second
-    red_car.gear_next.should == :over_drive
-    red_car.gear_next.should == :reverse
-    red_car.gear_next.should == :neutral
+    [:first, :second, :over_drive, :reverse, :neutral].each do |gear|
+      red_car.gear_next.should == gear
+    end
     red_car.gear.should == :neutral
-    red_car.gear_previous.should == :reverse
-    red_car.gear_previous.should == :over_drive
-    red_car.gear_previous.should == :second
+    [ :reverse, :over_drive, :second].each do |gear|
+      red_car.gear_previous.should == gear
+    end
     red_car.gear_previous
     red_car.gear.should == :first
   end
