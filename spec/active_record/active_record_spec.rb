@@ -158,7 +158,7 @@ describe "RaceCar" do
   end
 
   it "should not raise InvalidEnumeration when parametrically initialized with invalid column attribute value" do
-    expect{ red_car.gear = :drive}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+    expect{ red_car.gear = :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
   end
 
   it "should raise RecordInvalid on create! when parametrically initialized with invalid column attribute value" do
@@ -354,8 +354,7 @@ describe "RaceCar" do
     red_car.save!
 
     blue_car = RaceCar.find red_car.id
-    blue_car.lights.should == "--- :off\n"
-    blue_car[:lights].should == "--- :off\n"
+    blue_car.lights.should == "off"
+    blue_car[:lights].should == "off"
   end
-
 end
