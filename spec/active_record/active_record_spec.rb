@@ -62,35 +62,39 @@ describe "RaceCar" do
     blue_car.should have_predicate_methods
   end
 
-  it "should be created and found with dynamic find or creator method" do
-    blue_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
-    blue_car.should_not be_nil
-    blue_car.gear.should == :second
-    blue_car.name.should == 'specialty'
+  context 'dynamic finders' do
+    it "#find_or_create_by_name_and_gear" do
+      blue_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
+      blue_car.should_not be_nil
+      blue_car.gear.should == :second
+      blue_car.name.should == 'specialty'
 
-    yellow_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
-    yellow_car.gear.should == :second
-    yellow_car.id.should == blue_car.id
-  end
-  it "should be initialized with dynamic find or initialize method" do
-    blue_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
-    blue_car.should_not be_nil
-    blue_car.gear.should == :second
-    blue_car.name.should == 'myspecialty'
-    lambda { blue_car.save! }.should_not raise_exception
+      yellow_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
+      yellow_car.gear.should == :second
+      yellow_car.id.should == blue_car.id
+    end
 
-    yellow_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
-    yellow_car.gear.should == :second
-    yellow_car.id.should == blue_car.id
-  end
-  it "should find record using dynamic finder by enumerated column :gear attributes" do
-    red_car.gear = :second
-    red_car.name = 'special'
-    red_car.save!
+    it "#find_or_initialize_by_name_and_gear" do
+      blue_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
+      blue_car.should_not be_nil
+      blue_car.gear.should == :second
+      blue_car.name.should == 'myspecialty'
+      lambda { blue_car.save! }.should_not raise_exception
 
-    blue_car = RaceCar.find_by_gear_and_name(:second, 'special')
-    blue_car.should_not be_nil
-    blue_car.id.should == red_car.id
+      yellow_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
+      yellow_car.gear.should == :second
+      yellow_car.id.should == blue_car.id
+    end
+
+    it "#find_by_gear_and_name" do
+      red_car.gear = :second
+      red_car.name = 'special'
+      red_car.save!
+
+      blue_car = RaceCar.find_by_gear_and_name(:second, 'special')
+      blue_car.should_not be_nil
+      blue_car.id.should == red_car.id
+    end
   end
 
   it "should initialize according to enumerated attribute definitions" do
@@ -121,14 +125,13 @@ describe "RaceCar" do
 
   it "should initialize using parameter hash with string keys" do
     yellow_car = RaceCar.new({'name'=>'FastFurious',
-                              'gear'=>'second',
-                              'lights'=>'on',
-                              'choke'=>'medium'})
+                             'gear'=>'second',
+                             'lights'=>'on',
+                             'choke'=>'medium'})
     yellow_car.gear.should == :second
     yellow_car.lights.should == 'on'
     yellow_car.choke.should == :medium
   end
-
 
   it "should convert non-column enumerated attributes from string to symbols" do
     red_car.choke = 'medium'
@@ -197,7 +200,7 @@ describe "RaceCar" do
   end
 
   it "should raise RecordInvalid on save! after setting enumerated column attribute with []= method" do
-    red_car[:gear]= :drive
+    red_car[:gear] = :drive
     lambda{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
   end
 
