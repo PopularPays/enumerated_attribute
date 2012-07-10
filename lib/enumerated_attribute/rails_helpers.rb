@@ -22,6 +22,12 @@ if defined?(ActiveRecord)
 					column_without_enumerated_attribute(name, type, options)
 				end
 				safe_alias_method_chain :column, :enumerated_attribute
+
+				def change_with_enumerated_attribute(name, type, options = {})
+					type = 'string' if type.to_s == 'enum'
+					change_without_enumerated_attribute(name, type, options)
+				end
+				safe_alias_method_chain :change, :enumerated_attribute
 				
 				def enum(*args)
 					options = args.extract_options!                                      
