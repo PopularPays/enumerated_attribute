@@ -502,7 +502,7 @@ Second, do not forget to add the +enum_attr+ macro to the generated model and mi
   
 === Formtastic integration
 
-You can display the select input in a Formtastic form with a little monkey patching. First, extend Formtastic with an initializer:
+You can display the select input in a Formtastic form with a little monkey patching. First, extend Formtastic with a file in @app/inputs/enum_input.rb@:
 
     require 'formtastic'
 
