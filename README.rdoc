@@ -504,25 +504,11 @@ Second, do not forget to add the +enum_attr+ macro to the generated model and mi
 
 You can display the select input in a Formtastic form with a little monkey patching. First, extend Formtastic with a file in +app/inputs/enum_input.rb+:
 
-    require 'formtastic'
-
-    module Formtastic #:nodoc:
-      module Inputs #:nodoc:
-        class EnumInput < SelectInput #:nodoc:
-          def to_html
-            unless options[:collection]
-              enum = @object.enums(method.to_sym)
-              choices = enum ? enum.select_options : []
-              options[:collection] = choices
-            end
-            if (value = @object.__send__(method.to_sym))
-              options[:selected] ||= value.to_s
-            else
-              options[:include_blank] ||= true
-            end
-            super
-          end
-        end
+    class EnumInput < Formtastic::Inputs::SelectInput # or RadioInput
+      def raw_collection
+        enum = @object.enums(method.to_sym)
+        choices = enum ? enum.select_options : []
+        @raw_collection ||= (collection_from_options || choices)
       end
     end
 
