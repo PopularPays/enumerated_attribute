@@ -36,6 +36,12 @@ if defined?(ActiveRecord)
         end
       end
     end
+    class Migration
+      def add_column(table, name, type, options = {})
+        type = 'string' if type.to_s == 'enum'
+        method_missing(:add_column, table, name, type, options)
+      end
+    end
   end
 end
 
