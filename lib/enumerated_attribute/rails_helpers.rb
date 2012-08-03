@@ -41,6 +41,10 @@ if defined?(ActiveRecord)
         type = 'string' if type.to_s == 'enum'
         method_missing(:add_column, table, name, type, options)
       end
+      def change_column(table, name, type, options = {})
+        type = 'string' if type.to_s == 'enum'
+        method_missing(:change_column, table, name, type, options)
+      end
     end
   end
 end
