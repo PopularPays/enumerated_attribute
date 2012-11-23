@@ -103,7 +103,7 @@ module EnumeratedAttribute
 									result
 								end
 							end
-              unless private_method_defined?(:method_missing_without_enumerated_attribute)
+              unless method_defined?(:method_missing_without_enumerated_attribute) || private_method_defined?(:method_missing_without_enumerated_attribute)
                 define_chained_method(:method_missing, :enumerated_attribute) do |method_id, *arguments|
                   arguments = arguments.map{|arg| arg.is_a?(Symbol) ? arg.to_s : arg }
                   method_missing_without_enumerated_attribute(method_id, *arguments)
