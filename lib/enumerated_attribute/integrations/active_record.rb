@@ -21,7 +21,15 @@ module EnumeratedAttribute
 
 			def write_enumerated_attribute(name, val)
 				name = name.to_s
-				return write_attribute(name, val) unless self.class.has_enumerated_attribute?(name)
+				unless self.class.has_enumerated_attribute?(name)
+					# allow for 'virtual' attributes such as when using Devise (:password, :confirm_password)
+					setter = "#{name}=".to_sym
+					if !self.attribute_names.include?(name) && self.methods.include?(setter)
+						return self.send(setter, val)
+					else
+						return write_attribute(name, val)
+					end
+				end
 				val = nil if val == ''
 				val_str = val.to_s if val
 				val_sym = val.to_sym if val
