@@ -21,7 +21,15 @@ module EnumeratedAttribute
 
 			def write_enumerated_attribute(name, val)
 				name = name.to_s
-				return write_attribute(name, val) unless self.class.has_enumerated_attribute?(name)
+				unless self.class.has_enumerated_attribute?(name)
+					# allow for 'virtual' attributes such as when using Devise (:password, :confirm_password)
+					setter = "#{name}=".to_sym
+					if !self.attribute_names.include?(name) && self.methods.include?(setter)
+						return self.send(setter, val)
+					else
+						return write_attribute(name, val)
+					end
+				end
 				val = nil if val == ''
 				val_str = val.to_s if val
 				val_sym = val.to_sym if val
@@ -103,7 +111,7 @@ module EnumeratedAttribute
 									result
 								end
 							end
-              unless private_method_defined?(:method_missing_without_enumerated_attribute)
+              unless method_defined?(:method_missing_without_enumerated_attribute) || private_method_defined?(:method_missing_without_enumerated_attribute)
                 define_chained_method(:method_missing, :enumerated_attribute) do |method_id, *arguments|
                   arguments = arguments.map{|arg| arg.is_a?(Symbol) ? arg.to_s : arg }
                   method_missing_without_enumerated_attribute(method_id, *arguments)
