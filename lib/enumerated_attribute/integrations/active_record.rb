@@ -79,8 +79,8 @@ module EnumeratedAttribute
 			def attribute=(attr_name, value); write_enumerated_attribute(attr_name, value); end
 
 			module ClassMethods
-				def instantiate(record)
-					object = super(record)
+				def instantiate(*args)
+					object = super
 					self.enumerated_attributes.each do |k,v|
 						unless object.has_attribute?(k) #only initialize the non-column enumerated attributes
 							object.write_enumerated_attribute(k, v.init_value)
