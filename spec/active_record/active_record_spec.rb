@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'active_record/test_in_memory'
 require 'active_record'
 require 'enumerated_attribute'
@@ -5,410 +6,360 @@ require 'active_record/race_car'
 
 describe "RaceCar" do
 
-	it "should have default labels for :gear attribute" do
-		labels_hash = {:reverse=>'Reverse', :neutral=>'Neutral', :first=>'First', :second=>'Second', :over_drive=>'Over drive'}
-		labels = ['Reverse', 'Neutral', 'First', 'Second', 'Over drive']
-		select_options = [['Reverse', 'reverse'], ['Neutral', 'neutral'], ['First', 'first'], ['Second', 'second'], ['Over drive', 'over_drive']]
-		r=RaceCar.new
-		r.gears.labels.should == labels
-		labels_hash.each do |k,v|
-			r.gears.label(k).should == v
-		end
-		r.gears.hash.should == labels_hash
-		r.gears.select_options.should == select_options
-	end
-	
-	it "should retrieve :gear enums through enums method" do
-		r=RaceCar.new
-		r.enums(:gear).should == r.gears
-	end
+  let (:red_car) { RaceCar.new }
 
-	it "should return a Symbol type from reader methods" do
-		r=RaceCar.new
-		r.gear.should be_an_instance_of(Symbol)
-	end
-	
-	it "should increment and decrement :gear attribute correctly" do
-		r=RaceCar.new
-		r.gear = :neutral
-		r.gear_next.should == :first
-		r.gear_next.should == :second
-		r.gear_next.should == :over_drive
-		r.gear_next.should == :reverse
-		r.gear_next.should == :neutral
-		r.gear.should == :neutral
-		r.gear_previous.should == :reverse
-		r.gear_previous.should == :over_drive
-		r.gear_previous.should == :second
-		r.gear_previous
-		r.gear.should == :first
-	end
-	
-	it "should have dynamic predicate methods for :gear attribute" do
-		r=RaceCar.new
-		r.gear = :second
-		r.gear_is_in_second?.should be_true
-		r.gear_not_in_second?.should be_false
-		r.gear_is_nil?.should be_false
-		r.gear_is_not_nil?.should be_true
-	end
-	
-	it "should have working dynamic predicate methods on retrieved objects" do
-		r=RaceCar.new
-		r.gear = :second
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.should_not be_nil
-		s.gear_is_in_second?.should be_true
-		s.gear_is_not_in_second?.should be_false
-		s.gear_is_nil?.should be_false
-		s.gear_is_not_nil?.should be_true
-	end
+  describe 'labels' do
+    let(:labels) { ['Reverse', 'Neutral', 'First', 'Second', 'Over drive'] }
+    let(:labels_hash) { { :reverse => "Reverse",
+                          :neutral => "Neutral",
+                          :first => "First",
+                          :second => "Second",
+                          :over_drive => "Over drive" }}
 
-  it "should be created and found with dynamic find or creator method" do
-    s = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
-    s.should_not be_nil
-    s.gear.should == :second
-    s.name.should == 'specialty'
+    it "sets default labels for :gear attribute" do
+      select_options = [['Reverse', 'reverse'],
+                        ['Neutral', 'neutral'],
+                        ['First', 'first'],
+                        ['Second', 'second'],
+                        ['Over drive', 'over_drive']]
 
-    s0 = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
-    s0.gear.should == :second
-    s0.id.should == s.id
+      red_car.gears.labels.should == labels
+      labels_hash.each { |k,v| red_car.gears.label(k).should == v }
+      red_car.gears.hash.should == labels_hash
+      red_car.gears.select_options.should == select_options
+    end
   end
-  it "should be initialized with dynamic find or initialize method" do
-    s = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
-    s.should_not be_nil
-    s.gear.should == :second
-    s.name.should == 'myspecialty'
-    lambda { s.save! }.should_not raise_exception
 
-    s0 = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
-    s0.gear.should == :second
-    s0.id.should == s.id
+  it "#enums(:gear) retrieves all the gears" do
+    red_car.gear.should be_a_kind_of Symbol
+    red_car.enums(:gear).should == red_car.gears
   end
-	it "should find record using dynamic finder by enumerated column :gear attributes" do
-		r=RaceCar.new
-		r.gear = :second
-		r.name = 'special'
-		r.save!
-		
-		s=RaceCar.find_by_gear_and_name(:second, 'special')
-		s.should_not be_nil
-		s.id.should == r.id
-	end
-	
-	it "should initialize according to enumerated attribute definitions" do
-		r = RaceCar.new
-		r.gear.should == :neutral
-		r.choke.should == :none
-	end
-	
-	it "should create new instance using block" do
-		r = RaceCar.new do |r|
-			r.gear = :first
-			r.choke = :medium
-			r.lights = 'on'
-		end
-		r.gear.should == :first
-		r.lights.should == 'on'
-		r.choke.should == :medium
-	end
-	
-	it "should initialize using parameter hash with symbol keys" do
-		r=RaceCar.new(:name=>'FastFurious', :gear=>:second, :lights=>'on', :choke=>:medium)
-		r.gear.should == :second
-		r.lights.should == 'on'
-		r.choke.should == :medium
-	end
-	
-	it "should initialize using parameter hash with string keys" do
-		r=RaceCar.new({'name'=>'FastFurious', 'gear'=>'second', 'lights'=>'on', 'choke'=>'medium'})
-		r.gear.should == :second
-		r.lights.should == 'on'
-		r.choke.should == :medium
-	end
-	
-	
-	it "should convert non-column enumerated attributes from string to symbols" do
-		r=RaceCar.new
-		r.choke = 'medium'
-		r.choke.should == :medium
-		r.save!		
-	end
-	
-	it "should convert enumerated column attributes from string to symbols" do
-		r=RaceCar.new
-		r.gear = 'second'
-		r.gear.should == :second
-		r.save!
 
-		s=RaceCar.find r.id
-		s.gear.should == :second
-	end
-	
-	it "should not convert non-enumerated column attributes from string to symbols" do
-		r=RaceCar.new
-		r.lights = 'off'
-		r.lights.should == 'off'
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.lights.should == 'off'
-	end	
+  context 'generated methods' do
+    before do
+      red_car.gear = :neutral
+    end
 
-	it "should not raise InvalidEnumeration when parametrically initialized with invalid column attribute value" do
-		r=RaceCar.new
-		lambda{ r.gear= :drive}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
-	end
+    it "#gear_next" do
+      [:first, :second, :over_drive, :reverse, :neutral].each do |gear|
+        red_car.gear_next.should == gear
+      end
+    end
 
-	it "should raise RecordInvalid on create! when parametrically initialized with invalid column attribute value" do
-		lambda{ RaceCar.create!(:gear => :drive)}.should raise_error(ActiveRecord::RecordInvalid)
-	end
+    it '#gear_previous' do
+      [ :reverse, :over_drive, :second].each do |gear|
+        red_car.gear_previous.should == gear
+      end
+      red_car.gear_previous
+      red_car.gear.should == :first
+    end
+  end
 
-	
-	it "should not raise InvalidEnumeration when parametrically initialized with invalid non-column attribute" do
-		r=RaceCar.new
-		lambda{ r.choke= :all}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
-	end
+  it "has dynamic predicate methods for the :gear attribute" do
+    red_car.gear = :second
+    red_car.should have_predicate_methods
+  end
 
-	it "should not be valid on non-column attribute with parametrically initialized bad value" do
-		r=RaceCar.new
-		r.choke= :all
-		r.should_not be_valid
-	end
+  it "can access dynamic predicate methods on retrieved objects" do
+    red_car.gear = :second
+    red_car.save!
 
-	
-	it "should return non-column enumerated attributes from [] method" do
-		r = RaceCar.new
-		r[:choke].should == :none
-	end
-	
-	it "should return enumerated column attributes from [] method" do
-		r=RaceCar.new
-		r.gear = :neutral
-		r[:gear].should == :neutral
-	end
-	
-	it "should set non-column enumerated attributes with []= method" do
-		r=RaceCar.new
-		r[:choke] = :medium
-		r.choke.should == :medium
-	end
-	
-	it "should set enumerated column attriubtes with []= method" do
-		r=RaceCar.new
-		r[:gear] = :second
-		r.gear.should == :second
-	end
-	
-	it "should not raise InvalidEnumeration when setting enumerated column attribute with []= method" do
-		r=RaceCar.new
-		lambda{ r[:gear]= :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
-	end
-	
-	it "should raise RecordInvalid on save! after setting enumerated column attribute with []= method" do
-		r=RaceCar.new
-		r[:gear]= :drive
-		lambda{ r.save! }.should raise_error(ActiveRecord::RecordInvalid)
-	end
-	
-	it "should set and retrieve string for non-enumerated column attributes with []=" do
-		r=RaceCar.new
-		r[:lights] = 'on'
-		r.lights.should == 'on'
-		r[:lights].should == 'on'
-	end
-	
-	it "should set and retrieve symbol for non-enumerated column attributes with []=" do
-		r=RaceCar.new
-		r[:lights] = :on
-		r.lights.should == :on
-		r[:lights].should == :on
-	end
+    blue_car = RaceCar.find red_car.id
+    blue_car.should have_predicate_methods
+  end
 
-	it "should not raise InvalidEnumeration for invalid enum passed to attributes=" do
-		r=RaceCar.new
-		lambda { r.attributes = {:lights=>'off', :gear =>:drive} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
-	end
+  context 'dynamic finders' do
+    it "#find_or_create_by_name_and_gear" do
+      blue_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
+      blue_car.gear.should == :second
+      blue_car.name.should == 'specialty'
 
-	it "should raise RecordInvalid on save! for invalid enum passed to attributes=" do
-		r=RaceCar.new
-		r.attributes = {:lights=>'off', :gear =>:drive}
-		lambda { r.save! }.should raise_error(ActiveRecord::RecordInvalid)
-	end
+      yellow_car = RaceCar.find_or_create_by_name_and_gear('specialty', :second)
+      yellow_car.gear.should == :second
+      yellow_car.id.should == blue_car.id
+    end
 
-=begin
-	#do not write symbols to enumerated column attributes using write_attribute
-	#do not user read_attribute to read an enumerated column attribute
-	it "should write enumeration with write_attribute" do
-		r=RaceCar.new
-		r.write_attribute(:gear, :first)
-		r.gear.should == :first
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.gear.should == :first
-		s.write_attribute(:gear, :second)
-		s.save!
-		
-		t=RaceCar.find s.id
-		t.gear.should == :second
-	end
-	
-	it "should raise error when setting enumerated column attribute to invalid enum using write_attribute" do
-		r=RaceCar.new
-		lambda { r.write_attribute(:gear, :yo) }.should raise_error
-	end	
-=end
-	
-	it "should retrieve symbols for enumerations from ActiveRecord :attributes method" do
-		r=RaceCar.new
-		r.gear = :second
-		r.choke = :medium
-		r.lights = 'on'
-		r.save!
-		
-		s = RaceCar.find(r.id)
-		s.attributes['gear'].should == :second
-		s.attributes['lights'].should == 'on'
-	end
-	
-	it "should update_attribute for enumerated column attribute" do
-		r=RaceCar.new
-		r.gear = :first
-		r.save!
-		r.update_attribute(:gear, :second)
-		r.gear.should == :second
-		
-		s=RaceCar.find r.id
-		s.gear.should == :second
-	end
-	
-	it "should update_attribute for non-enumerated column attribute" do
-		r=RaceCar.new
-		r.lights = 'on'
-		r.save!
-		r.update_attribute(:lights, 'off')
-		r.lights.should == 'off'
-		
-		s=RaceCar.find r.id
-		s.lights.should == 'off'
-	end
-	
-	it "should update_attributes for both non- and enumerated column attributes" do
-		r=RaceCar.new
-		r.gear = :first
-		r.lights = 'off'
-		r.save!
-		r.update_attributes({:gear=>:second, :lights=>'on'})
-		s=RaceCar.find r.id
-		s.gear.should == :second
-		s.lights.should == 'on'
-		s.update_attributes({:gear=>'over_drive', :lights=>'off'})
-		t=RaceCar.find s.id
-		t.gear.should == :over_drive
-		t.lights.should == 'off'
-	end
-	
-	it "should provide symbol values for enumerated column attributes from the :attributes method" do
-		r=RaceCar.new
-		r.lights = 'on'
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.attributes['gear'].should == :neutral
-	end
-	
-	it "should provide normal values for non-enumerated column attributes from the :attributes method"  do
-		r=RaceCar.new
-		r.lights = 'on'
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.attributes['lights'].should == 'on'
-	end
-	
-	it "should not raise InvalidEnumeration when setting invalid enumeration value with :attributes= method" do
-		r=RaceCar.new
-		lambda { r.attributes = {:gear=>:yo, :lights=>'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
-	end
+    it "#find_or_initialize_by_name_and_gear" do
+      blue_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
+      blue_car.should_not be_nil
+      blue_car.gear.should == :second
+      blue_car.name.should == 'myspecialty'
+      expect{ blue_car.save! }.should_not raise_exception
 
-	it "should raise RecordInvalid on save! after setting invalid enumeration value with :attributes= method" do
-		r=RaceCar.new
-		r.attributes = {:gear=>:yo, :lights=>'on'}
-		lambda { r.save! }.should raise_error(ActiveRecord::RecordInvalid)
-	end
-	
-	it "should not set init value for enumerated column attribute saved as nil" do
-		r=RaceCar.new
-		r.gear = nil
-		r.lights = 'on'
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.gear.should == nil
-		s.lights.should == 'on'
-	end
-	
-	it "should not set init value for enumerated column attributes saved as value" do
-		r=RaceCar.new
-		r.gear = :second
-		r.lights = 'all'
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.gear.should == :second
-		s.lights.should == 'all'
-	end
+      yellow_car = RaceCar.find_or_initialize_by_name_and_gear('myspecialty', :second)
+      yellow_car.gear.should == :second
+      yellow_car.id.should == blue_car.id
+    end
 
-	it "should save and retrieve its name" do
-		r = RaceCar.new
-		r.name= 'Green Meanie'
-		r.save!
-		
-		s = RaceCar.find r.id
-		s.should_not be_nil
-		s.name.should == 'Green Meanie'
-	end
-	
-	it "should save and retrieve symbols for enumerated column attribute" do
-		r = RaceCar.new
-		r.gear = :over_drive
-		r.save!
-		
-		s = RaceCar.find r.id
-		#s.should_not be_nil
-		s.gear.should == :over_drive
-	end
-	
-	it "should not save values for non-column enumerated attributes" do
-		r=RaceCar.new
-		r.choke = :medium
-		r.save!
-		
-		s=RaceCar.find r.id
-		s.choke.should == :none
-	end
-	
-	it "should save string and retrieve string for non-enumerated column attributes" do
-		r =RaceCar.new
-		r.lights = 'on'
-		r.save!
-		
-		s = RaceCar.find r.id
-		s.lights.should == 'on'
-		s[:lights].should == 'on'
-	end
-	
-	it "should save symbol and retrieve string for non-enumerated column attributes" do
-		r =RaceCar.new
-		r.lights = :off
-		r.save!
-		
-		s = RaceCar.find r.id
-		s.lights.should == "--- :off\n"
-		s[:lights].should == "--- :off\n"
-	end
-	
+    it "#find_by_gear_and_name" do
+      red_car.gear = :second
+      red_car.name = 'special'
+      red_car.save!
+
+      blue_car = RaceCar.find_by_gear_and_name(:second, 'special')
+      blue_car.should_not be_nil
+      blue_car.id.should == red_car.id
+    end
+  end
+
+  it "should initialize according to enumerated attribute definitions" do
+    red_car.gear.should == :neutral
+    red_car.choke.should == :none
+  end
+
+  it "should create new instance using block" do
+    red_car = RaceCar.new do |red_car|
+      red_car.gear = :first
+      red_car.choke = :medium
+      red_car.lights = 'on'
+    end
+    red_car.gear.should == :first
+    red_car.lights.should == 'on'
+    red_car.choke.should == :medium
+  end
+
+  it "should initialize using parameter hash with symbol keys" do
+    yellow_car = RaceCar.new(:name=>'FastFurious',
+                             :gear=>:second,
+                             :lights => 'on',
+                             :choke=>:medium)
+    yellow_car.gear.should == :second
+    yellow_car.lights.should == 'on'
+    yellow_car.choke.should == :medium
+  end
+
+  it "should initialize using parameter hash with string keys" do
+    yellow_car = RaceCar.new({'name'=>'FastFurious',
+                             'gear'=>'second',
+                             'lights'=>'on',
+                             'choke'=>'medium'})
+    yellow_car.gear.should == :second
+    yellow_car.lights.should == 'on'
+    yellow_car.choke.should == :medium
+  end
+
+  it "should convert non-column enumerated attributes from string to symbols" do
+    red_car.choke = 'medium'
+    red_car.choke.should == :medium
+    red_car.save!
+  end
+
+  it "should convert enumerated column attributes from string to symbols" do
+    red_car.gear = 'second'
+    red_car.gear.should == :second
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == :second
+  end
+
+  it "should not convert non-enumerated column attributes from string to symbols" do
+    red_car.lights = 'off'
+    red_car.lights.should == 'off'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.lights.should == 'off'
+  end
+
+  it "should not raise InvalidEnumeration when parametrically initialized with invalid column attribute value" do
+    expect{ red_car.gear = :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+  end
+
+  it "should raise RecordInvalid on create! when parametrically initialized with invalid column attribute value" do
+    expect{ RaceCar.create!(:gear => :drive)}.should raise_error(ActiveRecord::RecordInvalid)
+  end
+
+  it "should not raise InvalidEnumeration when parametrically initialized with invalid non-column attribute" do
+    expect{ red_car.choke= :all}.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+  end
+
+  it "should not be valid on non-column attribute with parametrically initialized bad value" do
+    red_car.choke = :all
+    red_car.should_not be_valid
+  end
+
+  it "should return non-column enumerated attributes from [] method" do
+    red_car[:choke].should == :none
+  end
+
+  it "should return enumerated column attributes from [] method" do
+    red_car.gear = :neutral
+    red_car[:gear].should == :neutral
+  end
+
+  describe "#[]=" do
+    it "sets non-column enumerated attributes" do
+      red_car[:choke] = :medium
+      red_car.choke.should == :medium
+    end
+
+    it "sets enumerated column attributes" do
+      red_car[:gear] = :second
+      red_car.gear.should == :second
+    end
+  end
+
+  it "should not raise InvalidEnumeration when setting enumerated column attribute with []= method" do
+    expect{ red_car[:gear]= :drive }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+  end
+
+  it "should raise RecordInvalid on save! after setting enumerated column attribute with []= method" do
+    red_car[:gear] = :drive
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+  end
+
+  it "should set and retrieve string for non-enumerated column attributes with []=" do
+    red_car[:lights] = 'on'
+    red_car.lights.should == 'on'
+    red_car[:lights].should == 'on'
+  end
+
+  it "should set and retrieve symbol for non-enumerated column attributes with []=" do
+    red_car[:lights] = :on
+    red_car.lights.should == :on
+    red_car[:lights].should == :on
+  end
+
+  it "should not raise InvalidEnumeration for invalid enum passed to attributeblue_car = " do
+    expect{ red_car.attributes = {:lights => 'off', :gear =>:drive} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+  end
+
+  it "should raise RecordInvalid on save! for invalid enum passed to attributeblue_car = " do
+    red_car.attributes = {:lights => 'off', :gear =>:drive}
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+  end
+
+  it "should retrieve symbols for enumerations from ActiveRecord :attributes method" do
+    red_car.gear = :second
+    red_car.choke = :medium
+    red_car.lights = 'on'
+    red_car.save!
+
+    blue_car = RaceCar.find(red_car.id)
+    blue_car.attributes['gear'].should == :second
+    blue_car.attributes['lights'].should == 'on'
+  end
+
+  it "should update_attribute for enumerated column attribute" do
+    red_car.gear = :first
+    red_car.save!
+    red_car.update_attribute(:gear, :second)
+    red_car.gear.should == :second
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == :second
+  end
+
+  it "should update_attribute for non-enumerated column attribute" do
+    red_car.lights = 'on'
+    red_car.save!
+    red_car.update_attribute(:lights, 'off')
+    red_car.lights.should == 'off'
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.lights.should == 'off'
+  end
+
+  it "should update_attributes for both non- and enumerated column attributes" do
+    red_car.gear = :first
+    red_car.lights = 'off'
+    red_car.save!
+    red_car.update_attributes({:gear=>:second, :lights => 'on'})
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == :second
+    blue_car.lights.should == 'on'
+    blue_car.update_attributes({:gear=>'over_drive', :lights => 'off'})
+    yellow_car = RaceCar.find blue_car.id
+    yellow_car.gear.should == :over_drive
+    yellow_car.lights.should == 'off'
+  end
+
+  it "should provide symbol values for enumerated column attributes from the :attributes method" do
+    red_car.lights = 'on'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.attributes['gear'].should == :neutral
+  end
+
+  it "should provide normal values for non-enumerated column attributes from the :attributes method"  do
+    red_car.lights = 'on'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.attributes['lights'].should == 'on'
+  end
+
+  it "should not raise InvalidEnumeration when setting invalid enumeration value with :attributeblue_car =  method" do
+    expect{ red_car.attributes = {:gear=>:yo, :lights => 'on'} }.should_not raise_error(EnumeratedAttribute::InvalidEnumeration)
+  end
+
+  it "should raise RecordInvalid on save! after setting invalid enumeration value with :attributeblue_car =  method" do
+    red_car.attributes = {:gear=>:yo, :lights => 'on'}
+    expect{ red_car.save! }.should raise_error(ActiveRecord::RecordInvalid)
+  end
+
+  it "should not set init value for enumerated column attribute saved as nil" do
+    red_car.gear = nil
+    red_car.lights = 'on'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == nil
+    blue_car.lights.should == 'on'
+  end
+
+  it "should not set init value for enumerated column attributes saved as value" do
+    red_car.gear = :second
+    red_car.lights = 'all'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == :second
+    blue_car.lights.should == 'all'
+  end
+
+  it "should save and retrieve its name" do
+    red_car.name = 'Green Meanie'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.should_not be_nil
+    blue_car.name.should == 'Green Meanie'
+  end
+
+  it "should save and retrieve symbols for enumerated column attribute" do
+    red_car.gear = :over_drive
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.gear.should == :over_drive
+  end
+
+  it "should not save values for non-column enumerated attributes" do
+    red_car.choke = :medium
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.choke.should == :none
+  end
+
+  it "should save string and retrieve string for non-enumerated column attributes" do
+    red_car.lights = 'on'
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.lights.should == 'on'
+    blue_car[:lights].should == 'on'
+  end
+
+  it "should save symbol and retrieve string for non-enumerated column attributes" do
+    red_car.lights = :off
+    red_car.save!
+
+    blue_car = RaceCar.find red_car.id
+    blue_car.lights.should == "off"
+    blue_car[:lights].should == "off"
+  end
 end
